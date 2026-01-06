@@ -159,7 +159,8 @@ def init_postgres_schema():
         
         # 기본 권한 생성
         print("🔐 기본 권한 생성 중...")
-        admin_user_id = cursor.execute("SELECT id FROM users WHERE username = 'admin'").fetchone()
+        cursor.execute("SELECT id FROM users WHERE username = 'admin'")
+        admin_user_id = cursor.fetchone()
         if admin_user_id:
             admin_id = admin_user_id[0]
             permissions = [
