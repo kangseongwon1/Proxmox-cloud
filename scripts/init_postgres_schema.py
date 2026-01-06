@@ -51,11 +51,14 @@ def init_postgres_schema():
             CREATE TABLE users (
                 id SERIAL PRIMARY KEY,
                 username VARCHAR(80) UNIQUE NOT NULL,
-                password_hash VARCHAR(120) NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
                 name VARCHAR(100),
                 email VARCHAR(120),
+                role VARCHAR(20) DEFAULT 'developer',
                 is_active BOOLEAN DEFAULT TRUE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
         
