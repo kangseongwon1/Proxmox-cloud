@@ -127,15 +127,17 @@ def init_postgres_schema():
         print("💾 datastores 테이블 생성 중...")
         cursor.execute("""
             CREATE TABLE datastores (
-                id SERIAL PRIMARY KEY,
+                id VARCHAR(100) PRIMARY KEY,
                 name VARCHAR(100) UNIQUE NOT NULL,
-                type VARCHAR(50),
-                size BIGINT,
-                used BIGINT,
-                available BIGINT,
+                type VARCHAR(50) NOT NULL,
+                size BIGINT DEFAULT 0,
+                used BIGINT DEFAULT 0,
+                available BIGINT DEFAULT 0,
                 content TEXT,
                 enabled BOOLEAN DEFAULT TRUE,
-                shared BOOLEAN DEFAULT FALSE,
+                is_default_hdd BOOLEAN DEFAULT FALSE,
+                is_default_ssd BOOLEAN DEFAULT FALSE,
+                is_system_default BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
