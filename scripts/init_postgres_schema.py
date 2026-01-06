@@ -8,6 +8,7 @@ import os
 import sys
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from werkzeug.security import generate_password_hash
 
 def init_postgres_schema():
     """PostgreSQL 스키마 초기화"""
@@ -154,11 +155,13 @@ def init_postgres_schema():
         
         # 기본 관리자 사용자 생성
         print("👤 기본 관리자 사용자 생성 중...")
+        admin_password = 'admin123!'
+        admin_password_hash = generate_password_hash(admin_password)
         cursor.execute("""
-            INSERT INTO users (username, password_hash, name, email, is_active)
-            VALUES ('admin', 'scrypt:32768:8:1$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4QbQjQjQjQ', '시스템 관리자', 'admin@dmcmedia.co.kr', TRUE)
+            INSERT INTO users (username, password_hash, name, email, role, is_active)
+            VALUES (%s, %s, %s, %s, %s, %s)
             ON CONFLICT (username) DO NOTHING;
-        """)
+        """, ('admin', admin_password_hash, '시스템 관리자', 'admin@dmcmedia.co.kr', 'admin', True))
         
         # 기본 권한 생성
         print("🔐 기본 권한 생성 중...")
