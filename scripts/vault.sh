@@ -303,8 +303,28 @@ configure_vault() {
     if [ -n "$ENV_FILE" ]; then
         # 현재 ROOT_TOKEN을 .env 파일에 업데이트
         sed -i "s|VAULT_TOKEN=.*|VAULT_TOKEN=$ROOT_TOKEN|" "$ENV_FILE"
+        sed -i "s|TF_VAR_vault_token=.*|TF_VAR_vault_token=$ROOT_TOKEN|" "$ENV_FILE"
         log_success ".env 파일에 Vault 토큰 업데이트 완료: $ROOT_TOKEN"
         log_info "업데이트된 파일: $ENV_FILE"
+        
+        # ✅ vault_token.txt도 업데이트 (start_services에서 이 파일을 읽어서 .env를 덮어쓰기 때문)
+        local token_file=""
+        if [ -f "vault_token.txt" ]; then
+            token_file="vault_token.txt"
+        elif [ -f "../vault_token.txt" ]; then
+            token_file="../vault_token.txt"
+        fi
+        
+        if [ -n "$token_file" ]; then
+            echo "$ROOT_TOKEN" > "$token_file"
+            chmod 600 "$token_file"
+            log_success "vault_token.txt 업데이트 완료: $token_file"
+        else
+            # 파일이 없으면 상위 디렉토리에 생성
+            echo "$ROOT_TOKEN" > "../vault_token.txt"
+            chmod 600 "../vault_token.txt"
+            log_success "vault_token.txt 생성 완료: ../vault_token.txt"
+        fi
         
         # 환경변수도 즉시 업데이트
         export VAULT_TOKEN="$ROOT_TOKEN"
