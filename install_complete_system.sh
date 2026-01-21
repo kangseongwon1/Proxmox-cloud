@@ -54,6 +54,50 @@ log_step() {
 }
 
 # ========================================
+# 공통 유틸: .env 안전 업데이트
+# ========================================
+set_env_kv() {
+    # 사용법: set_env_kv KEY VALUE [ENV_FILE]
+    local key="$1"
+    local value="$2"
+    local env_file="${3:-.env}"
+
+    [ -f "$env_file" ] || return 0
+
+    # KEY=... 라인이 있으면 교체, 없으면 추가
+    if grep -qE "^${key}=" "$env_file"; then
+        # shellcheck disable=SC2001
+        sed -i "s|^${key}=.*|${key}=${value}|" "$env_file"
+    else
+        echo "${key}=${value}" >> "$env_file"
+    fi
+}
+
+sync_vault_token_to_env() {
+    # vault_token.txt의 값을 기준으로 .env / 현재 프로세스 환경변수를 강제로 최신화
+    # - 재설치/재초기화로 토큰이 갱신되는 경우에도 기존 값이 남아 Celery/Terraform이 깨지는 문제 방지
+    if [ -f "vault_token.txt" ]; then
+        local token
+        token="$(cat vault_token.txt | tr -d '\r\n')"
+        if [ -n "$token" ]; then
+            export VAULT_TOKEN="$token"
+            export TF_VAR_vault_token="$token"
+            set_env_kv "VAULT_TOKEN" "$token" ".env"
+            set_env_kv "TF_VAR_vault_token" "$token" ".env"
+            log_success "Vault 토큰을 .env에 강제 갱신했습니다."
+        fi
+    fi
+}
+
+restart_env_dependent_services() {
+    # .env가 바뀐 경우 systemd 서비스는 재시작해야 새 환경변수를 읽음
+    if command -v systemctl &>/dev/null; then
+        sudo systemctl restart proxmox-manager 2>/dev/null || true
+        sudo systemctl restart celery-worker 2>/dev/null || true
+    fi
+}
+
+# ========================================
 # 0. 사전 검증
 # ========================================
 
@@ -2145,6 +2189,9 @@ start_services() {
                             sed -i "s|VAULT_TOKEN=.*|VAULT_TOKEN=$VAULT_TOKEN|" .env
                             sed -i "s|TF_VAR_vault_token=.*|TF_VAR_vault_token=$VAULT_TOKEN|" .env
                         fi
+                        # ✅ 항상 최신 토큰으로 강제 동기화 + 서비스 재시작
+                        sync_vault_token_to_env
+                        restart_env_dependent_services
                         
                         # Vault 시크릿 설정 (Base64 암호화)
                         log_info "Vault 시크릿 설정 중 (Base64 암호화)..."
@@ -2191,6 +2238,9 @@ start_services() {
                     sed -i "s|TF_VAR_vault_token=.*|TF_VAR_vault_token=$VAULT_TOKEN|" .env
                     log_success "Vault 토큰이 .env 파일에 업데이트되었습니다."
                 fi
+                # ✅ 항상 최신 토큰으로 강제 동기화 + 서비스 재시작
+                sync_vault_token_to_env
+                restart_env_dependent_services
             elif [ -f "vault_init.txt" ]; then
                 log_info "vault_init.txt에서 Vault 토큰을 추출합니다..."
                 VAULT_TOKEN=$(grep "Initial Root Token:" vault_init.txt | awk '{print $4}')
@@ -2210,6 +2260,9 @@ start_services() {
                         sed -i "s|TF_VAR_vault_token=.*|TF_VAR_vault_token=$VAULT_TOKEN|" .env
                         log_success "Vault 토큰이 .env 파일에 업데이트되었습니다."
                     fi
+                    # ✅ 항상 최신 토큰으로 강제 동기화 + 서비스 재시작
+                    sync_vault_token_to_env
+                    restart_env_dependent_services
                 else
                     log_error "vault_init.txt에서 Vault 토큰을 찾을 수 없습니다."
                 fi
