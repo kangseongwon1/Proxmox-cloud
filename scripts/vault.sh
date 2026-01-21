@@ -292,12 +292,12 @@ configure_vault() {
     # .env 파일에 Vault 토큰 업데이트
     log_info ".env 파일에 Vault 토큰 업데이트 중..."
     
-    # .env 파일 경로 확인 (상위 디렉토리 우선)
+    # .env 파일 경로 확인 (현재 디렉토리 → 상위 디렉토리 순서)
     ENV_FILE=""
     if [ -f ".env" ]; then
         ENV_FILE=".env"
-    elif [ -f ".env" ]; then
-        ENV_FILE=".env"
+    elif [ -f "../.env" ]; then
+        ENV_FILE="../.env"
     fi
     
     if [ -n "$ENV_FILE" ]; then
@@ -412,12 +412,12 @@ set_environment() {
     # .env 파일에 Vault 토큰 업데이트
     log_info ".env 파일에 Vault 토큰 업데이트 중..."
     
-    # .env 파일 경로 확인 (상위 디렉토리 우선)
+    # .env 파일 경로 확인 (현재 디렉토리 → 상위 디렉토리 순서)
     ENV_FILE=""
     if [ -f ".env" ]; then
         ENV_FILE=".env"
-    elif [ -f ".env" ]; then
-        ENV_FILE=".env"
+    elif [ -f "../.env" ]; then
+        ENV_FILE="../.env"
     fi
     
     if [ -n "$ENV_FILE" ]; then
@@ -483,12 +483,12 @@ test_terraform() {
     # .env 파일에서 Terraform 변수 설정
     log_info ".env 파일에서 Terraform 변수 설정 중..."
     
-    # .env 파일 경로 확인 (상위 디렉토리 우선)
+    # .env 파일 경로 확인 (현재 디렉토리 → 상위 디렉토리 순서)
     ENV_FILE=""
     if [ -f ".env" ]; then
         ENV_FILE=".env"
-    elif [ -f ".env" ]; then
-        ENV_FILE=".env"
+    elif [ -f "../.env" ]; then
+        ENV_FILE="../.env"
     fi
     
     if [ -n "$ENV_FILE" ]; then

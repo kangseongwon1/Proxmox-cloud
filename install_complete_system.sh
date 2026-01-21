@@ -1072,11 +1072,12 @@ EOF
     fi
     
     # Terraform 변수들을 .env 파일에 추가
+    # ⚠️ VAULT_TOKEN은 placeholder로 넣고, Vault 설정 후 sync_vault_token_to_env에서 갱신함
     log_info "Terraform 변수를 .env 파일에 추가 중..."
     cat >> .env << EOF
 
 # Terraform 변수 (자동 매핑용)
-TF_VAR_vault_token=${VAULT_TOKEN}
+TF_VAR_vault_token=placeholder
 TF_VAR_vault_address=${VAULT_ADDR}
 TF_VAR_proxmox_endpoint=${PROXMOX_ENDPOINT}
 TF_VAR_proxmox_username=${PROXMOX_USERNAME}
@@ -1110,7 +1111,7 @@ EOF
             cat >> .env << EOF
 
 # Terraform 변수 (자동 매핑용)
-TF_VAR_vault_token=${VAULT_TOKEN}
+TF_VAR_vault_token=placeholder
 TF_VAR_vault_address=${VAULT_ADDR}
 TF_VAR_proxmox_endpoint=${PROXMOX_ENDPOINT}
 TF_VAR_proxmox_username=${PROXMOX_USERNAME}
@@ -1123,6 +1124,16 @@ EOF
         else
             log_info "Terraform 변수가 이미 .env 파일에 존재합니다"
         fi
+        
+        # ✅ Terraform 변수들을 현재 환경변수 값으로 업데이트 (재설치 시 값 동기화)
+        log_info "Terraform 변수들을 현재 환경변수로 동기화 중..."
+        sed -i "s|TF_VAR_vault_address=.*|TF_VAR_vault_address=${VAULT_ADDR}|" .env
+        sed -i "s|TF_VAR_proxmox_endpoint=.*|TF_VAR_proxmox_endpoint=${PROXMOX_ENDPOINT}|" .env
+        sed -i "s|TF_VAR_proxmox_username=.*|TF_VAR_proxmox_username=${PROXMOX_USERNAME}|" .env
+        sed -i "s|TF_VAR_proxmox_password=.*|TF_VAR_proxmox_password=${PROXMOX_PASSWORD}|" .env
+        sed -i "s|TF_VAR_proxmox_node=.*|TF_VAR_proxmox_node=${PROXMOX_NODE}|" .env
+        sed -i "s|TF_VAR_vm_username=.*|TF_VAR_vm_username=${SSH_USER}|" .env
+        log_success "Terraform 변수 동기화 완료"
     fi
     
     # .env 파일 로드
