@@ -23,7 +23,7 @@
         <div class="tab-content" id="serverTabsContent">
           <!-- Create Server Tab -->
           <div class="tab-pane fade" id="create" role="tabpanel">
-            {% if 'create_server' in session['permissions'] %}
+            {% if session.get('user_role') == 'admin' or 'create_server' in session.get('permissions', []) %}
             <form id="create-server-form">
               <!-- 서버 생성 모드 카드형 선택 UI -->
               <div class="mb-4">

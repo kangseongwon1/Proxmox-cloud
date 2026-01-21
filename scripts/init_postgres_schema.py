@@ -171,7 +171,25 @@ def init_postgres_schema():
         admin_user_id = cursor.fetchone()
         if admin_user_id:
             admin_id = admin_user_id[0]
+            # NOTE:
+            # 앱/프론트에서 사용하는 permission 키와 DB 시드 키가 불일치하면
+            # admin이어도 UI에서 "권한 없음"으로 표시될 수 있음.
+            # - UI/라우트에서 실제로 사용하는 키: create_server, delete_server, ...
+            # - 과거/레거시 키: server_create, user_manage 등
+            # 호환성을 위해 둘 다 넣되, 신규는 앱에서 사용하는 키를 우선한다.
             permissions = [
+                # ✅ 앱에서 사용하는 키 (권장)
+                'view_all',
+                'create_server', 'delete_server', 'start_server', 'stop_server', 'reboot_server',
+                'manage_server',
+                'manage_users',
+                'assign_roles', 'remove_role',
+                'manage_firewall_groups', 'assign_firewall_groups', 'remove_firewall_groups', 'manage_firewall',
+                'backup_management',
+                'manage_storage', 'manage_network',
+                'view_logs',
+
+                # 🔁 레거시/호환 키 (기존 데이터/코드 호환)
                 'server_create', 'server_delete', 'server_start', 'server_stop', 'server_reboot',
                 'server_configure', 'server_backup', 'server_restore', 'server_monitor',
                 'user_manage', 'role_assign', 'firewall_manage', 'datastore_manage',
